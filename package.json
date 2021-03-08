@@ -1,0 +1,27 @@
+{
+  "name": "browser-thermal-printer",
+  "version": "0.0.1",
+  "description": "Print on Epson and Star thermal printers in a browser",
+  "main": "browser-thermal-printer.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Klemen1337/browser-thermal-printer"
+  },
+  "keywords": [
+    "thermal printer",
+    "thermal",
+    "printer",
+    "epson",
+    "star"
+  ],
+  "author": "Klemen Kastelic <klemen.kast@gmail.com> (http://kastelic.net/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Klemen1337/browser-thermal-printer/issues"
+  },
+  "homepage": "https://github.com/Klemen1337/browser-thermal-printer",
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "unorm": "^1.6.0"
+  }
+}
