@@ -5,31 +5,15 @@ Browser module for EPSON and STAR thermal printers command line printing.
 ## Installation
 
 ```bash
-npm install node-thermal-printer
-```
-
-### Linux specific
-
-Linux requires build-essentials
-
-```bash
-sudo apt-get install build-essential
+npm install browser-thermal-printer
 ```
 
 ### Features
 
 ```js
-const ThermalPrinter = require("../node-thermal-printer").printer;
-const PrinterTypes = require("../node-thermal-printer").types;
+import ThermalPrinter, { PrinterTypes } from "../browser-thermal-printer";
 
-let printer = new ThermalPrinter({
-  type: PrinterTypes.STAR, // Printer type: 'star' or 'epson'
-  characterSet: "SLOVENIA", // Printer character set - default: SLOVENIA
-  removeSpecialCharacters: false, // Removes special characters - default: false
-  lineCharacter: "=", // Set character for lines - default: "-"
-});
-
-
+const printer = new ThermalPrinter(PrinterTypes.STAR);
 printer.print("Hello World"); // Append text
 printer.println("Hello World"); // Append text with new line
 printer.openCashDrawer(); // Kick the cash drawer
@@ -75,7 +59,7 @@ await printer.printImage("./assets/olaii-logo-black.png"); // Print PNG image
 
 print.clear(); // Clears printText value
 print.getText(); // Returns printer buffer string value
-print.getBuffer(); // Returns printer buffer
+print.getBuffer(); // Returns printer buffer - Pass this buffer to printer
 print.setBuffer(newBuffer); // Set the printer buffer to a copy of newBuffer
 print.getWidth(); // Get number of characters in one line
 ```
