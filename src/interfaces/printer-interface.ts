@@ -6,11 +6,11 @@ interface PrinterType {
   beep: () => Buffer;
   append: (appendBuffer: Buffer) => void;
   setTextSize: (height: number, width: number) => Buffer;
-  printQR: (data: string, settings: any) => Buffer;
-  pdf417: (data: string, settings: any) => Buffer;
-  code128: (data: string, settings: any) => Buffer;
-  maxiCode: (data: string, settings: any) => Buffer;
-  printBarcode: (data: string, type: string, settings: any) => Buffer;
+  printQR: (data: string, settings?: any) => Buffer;
+  pdf417: (data: string, settings?: any) => Buffer;
+  code128: (data: string, settings?: any) => Buffer;
+  maxiCode: (data: string, settings?: any) => Buffer;
+  printBarcode: (data: string, type?: string, settings?: any) => Buffer;
   printImage: (image: string) => Promise<Buffer>;
   printImageBuffer: (width: number, height: number, data: [any]) => Buffer;
 }

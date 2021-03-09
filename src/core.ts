@@ -1,8 +1,8 @@
 import { Buffer } from "buffer";
+import PNGReader from "png.js";
 import PrinterInterface from "./interfaces/printer-interface";
 import Star from "./interfaces/star/star";
 import Epson from "./interfaces/epson/epson";
-import PNGReader from "png.js";
 // import unorm from "unorm";
 
 export enum PrinterTypes {
@@ -300,27 +300,27 @@ export default class ThermalPrinter {
   }
 
   // ----------------------------------------------------- PRINT QR -----------------------------------------------------
-  printQR(data: string, settings: any) {
+  printQR(data: string, settings?: any) {
     this.append(this.printer.printQR(data, settings));
   }
 
   // ----------------------------------------------------- PRINT BARCODE -----------------------------------------------------
-  printBarcode(data: string, type: string, settings: any) {
+  printBarcode(data: string, type?: string, settings?: any) {
     this.append(this.printer.printBarcode(data, type, settings));
   }
 
   // ----------------------------------------------------- PRINT MAXICODE -----------------------------------------------------
-  maxiCode(data: string, settings: any) {
+  maxiCode(data: string, settings?: any) {
     this.append(this.printer.maxiCode(data, settings));
   }
 
   // ----------------------------------------------------- PRINT CODE128 -----------------------------------------------------
-  code128(data: string, settings: any) {
+  code128(data: string, settings?: any) {
     this.append(this.printer.code128(data, settings));
   }
 
   // ----------------------------------------------------- PRINT PDF417 -----------------------------------------------------
-  pdf417(data: string, settings: any) {
+  pdf417(data: string, settings?: any) {
     this.append(this.printer.pdf417(data, settings));
   }
 

@@ -1,4 +1,4 @@
-import ThermalPrinter, { PrinterTypes } from "../src/core"
+import ThermalPrinter, { PrinterTypes, TableAlign } from "../src/core"
 
 async function example () {
   const printer = new ThermalPrinter(PrinterTypes.EPSON);
@@ -73,22 +73,22 @@ async function example () {
   printer.table(["One", "Two", "Three", "Four"]);
 
   printer.tableCustom([
-    { text:"Left", align:"LEFT", width:0.5 },
-    { text:"Center", align:"CENTER", width:0.25, bold:true },
-    { text:"Right", align:"RIGHT", width:0.25 }
+    { text:"Left", align:TableAlign.LEFT, width:0.5 },
+    { text:"Center", align:TableAlign.CENTER, width:0.25, bold:true },
+    { text:"Right", align:TableAlign.RIGHT, width:0.25 }
   ]);
 
   printer.tableCustom([
-    { text:"Left", align:"LEFT", cols:8 },
-    { text:"Center", align:"CENTER", cols:10, bold:true },
-    { text:"Right", align:"RIGHT", cols:10 }
+    { text:"Left", align:TableAlign.LEFT, cols:8 },
+    { text:"Center", align:TableAlign.CENTER, cols:10, bold:true },
+    { text:"Right", align:TableAlign.RIGHT, cols:10 }
   ]);
 
   printer.cut();
   printer.openCashDrawer();
 
   // Print raw
-  console.log(print.getText());
+  console.log(printer.getText());
 }
 
 

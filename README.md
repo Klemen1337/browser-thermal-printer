@@ -82,23 +82,10 @@ print.getWidth(); // Get number of characters in one line
 
 ### How to run examples (Set to EPSON)
 
-Network printer
-
 ```bash
-node examples/example.js tcp://xxx.xxx.xxx.xxx
+node examples/example.ts
 ```
 
-Pritner name via Printer module
-
-```bash
-node examples/example.js 'printer:My Printer'
-```
-
-Local port or file
-
-```bash
-node examples/example.js '\\.\COM1'
-```
 
 ### 2D Barcode Examples
 

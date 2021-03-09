@@ -332,7 +332,7 @@ class Star implements PrinterInterface {
   }
 
   // ------------------------------ BARCODE ------------------------------
-  printBarcode(data: string, type: string, settings: any) {
+  printBarcode(data: string, type?: string, settings?: any) {
     this.buffer = new Buffer("");
     if (!settings) {
       settings = {};

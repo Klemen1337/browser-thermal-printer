@@ -2,7 +2,12 @@
   "name": "browser-thermal-printer",
   "version": "0.0.1",
   "description": "Print on Epson and Star thermal printers in a browser",
-  "main": "browser-thermal-printer.js",
+  "main": "dist/core.js",
+  "types": "dist/core.d.ts",
+  "scripts": {
+    "start": "tsc && node dist/core.js",
+    "build": "tsc"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Klemen1337/browser-thermal-printer"
@@ -26,6 +31,8 @@
     "unorm": "^1.6.0"
   },
   "devDependencies": {
-    "@types/png.js": "^0.2.0"
+    "@types/png.js": "^0.2.0",
+    "tslint": "^6.1.3",
+    "typescript": "^4.2.3"
   }
 }
