@@ -11,6 +11,8 @@ interface PrinterType {
   code128: (data: string, settings: any) => Buffer;
   maxiCode: (data: string, settings: any) => Buffer;
   printBarcode: (data: string, type: string, settings: any) => Buffer;
+  printImage: (image: string) => Promise<Buffer>;
+  printImageBuffer: (width: number, height: number, data: [any]) => Buffer;
 }
 
 export default PrinterType;

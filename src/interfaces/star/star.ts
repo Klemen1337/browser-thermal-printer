@@ -1,9 +1,18 @@
 import { Buffer } from "buffer";
-import PrinterType from "./printer-type";
+import PrinterInterface from "../printer-interface";
 import StarConfig from "./star-config";
 import StarCodePages from "./start-code-pages";
+import PNGReader from "png.js";
+// import PNG from "png-ts";
 
-class Star implements PrinterType {
+interface Pixel {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+}
+
+class Star implements PrinterInterface {
   codePage: Record<string, string> = StarCodePages;
   config: Record<string, Buffer> = StarConfig;
   buffer: Buffer = new Buffer("");
@@ -240,71 +249,87 @@ class Star implements PrinterType {
     return new Buffer("");
   }
 
-  // // ----------------------------------------------------- PRINT IMAGE -----------------------------------------------------
-  // async printImage(image) {
-  //   let fs = require('fs');
-  //   let PNG = require('pngjs').PNG;
-  //   try {
-  //     var data = fs.readFileSync(image);
-  //     var png = PNG.sync.read(data);
-  //     let buff = this.printImageBuffer(png.width, png.height, png.data);
-  //     return buff;
-  //   } catch(error) {
-  //     throw error;
-  //   }
-  // }
+  // ----------------------------------------------------- PRINT IMAGE -----------------------------------------------------
+  async printImage(image: string): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", image, true);
+      xhr.responseType = "arraybuffer";
 
-  // printImageBuffer(width, height, data) {
-  //   this.buffer = null;
-  //   // Get pixel rgba in 2D array
-  //   var pixels = [];
-  //   for (var i = 0; i < height; i++) {
-  //     var line = [];
-  //     for (var j = 0; j < width; j++) {
-  //       var idx = (width * i + j) << 2;
-  //       line.push({
-  //         r: data[idx],
-  //         g: data[idx + 1],
-  //         b: data[idx + 2],
-  //         a: data[idx + 3]
-  //       });
-  //     }
-  //     pixels.push(line);
-  //   }
+      xhr.onload = e => {
+        const r = e.target as XMLHttpRequest;
+        if (r.status == 200) {
+          const reader = new PNGReader(r.response);
+          reader.parse((err: any, png: any) => {
+            if (err) {
+              reject(err);
+            } else {
+              const buff = this.printImageBuffer(png.width, png.height, png.pixels);
+              resolve(buff);
+            }
+          });
+        }
+      };
 
-  //   this.append(Buffer.from([0x1b, 0x30]));
+      xhr.onerror = reject;
+      xhr.onabort = reject;
+      xhr.send();
+    });
+  }
 
-  //   // v3
-  //   for (var i = 0; i < Math.ceil(height / 24); i++) {
-  //     var imageBuffer = Buffer.from([]);
-  //     for (var y = 0; y < 24; y++) {
-  //       for (var j = 0; j < Math.ceil(width / 8); j++) {
-  //         var byte = 0x0;
-  //         for (var x = 0; x < 8; x++) {
-  //           if ((i * 24 + y < pixels.length) && (j * 8 + x < pixels[i * 24 + y].length)) {
-  //             var pixel = pixels[i * 24 + y][j * 8 + x];
-  //             if (pixel.a > 126) { // checking transparency
-  //               var grayscale = parseInt(0.2126 * pixel.r + 0.7152 * pixel.g + 0.0722 * pixel.b);
+  printImageBuffer(width: number, height: number, data: [number]): Buffer {
+    this.buffer = new Buffer("");
 
-  //               if (grayscale < 128) { // checking color
-  //                 var mask = 1 << 7 - x; // setting bitwise mask
-  //                 byte |= mask; // setting the correct bit to 1
-  //               }
-  //             }
-  //           }
-  //         }
-  //         imageBuffer = Buffer.concat([imageBuffer, Buffer.from([byte])]);
-  //       }
-  //     }
-  //     this.append(Buffer.from([0x1b, 0x6b, parseInt(imageBuffer.length / 24), 0x00]));
-  //     this.append(imageBuffer);
-  //     this.append(Buffer.from("\n"));
-  //   }
+    // Get pixel rgba in 2D array
+    const pixels: [Pixel[]] = [[]];
+    for (let i = 0; i < height; i++) {
+      const line: Pixel[] = [];
+      for (let j = 0; j < width; j++) {
+        const idx = (width * i + j) << 2;
+        line.push({
+          r: data[idx],
+          g: data[idx + 1],
+          b: data[idx + 2],
+          a: data[idx + 3]
+        });
+      }
+      pixels.push(line);
+    }
 
-  //   this.append(Buffer.from([0x1b, 0x7a, 0x01]));
+    this.append(Buffer.from([0x1b, 0x30]));
 
-  //   return this.buffer;
-  // }
+    // v3
+    for (let i = 0; i < Math.ceil(height / 24); i++) {
+      let imageBuffer = Buffer.from([]);
+      for (let y = 0; y < 24; y++) {
+        for (let j = 0; j < Math.ceil(width / 8); j++) {
+          let byte = 0x0;
+          for (let x = 0; x < 8; x++) {
+            if (i * 24 + y < pixels.length && j * 8 + x < pixels[i * 24 + y].length) {
+              const pixel = pixels[i * 24 + y][j * 8 + x];
+              if (pixel.a > 126) {
+                // checking transparency
+                const grayscale = Math.floor(0.2126 * pixel.r + 0.7152 * pixel.g + 0.0722 * pixel.b);
+                if (grayscale < 128) {
+                  // checking color
+                  const mask = 1 << (7 - x); // setting bitwise mask
+                  byte |= mask; // setting the correct bit to 1
+                }
+              }
+            }
+          }
+          imageBuffer = Buffer.concat([imageBuffer, Buffer.from([byte])]);
+        }
+      }
+      this.append(Buffer.from([0x1b, 0x6b, Math.floor(imageBuffer.length / 24), 0x00]));
+      this.append(imageBuffer);
+      this.append(Buffer.from("\n"));
+    }
+
+    this.append(Buffer.from([0x1b, 0x7a, 0x01]));
+
+    return this.buffer;
+  }
 
   // ------------------------------ BARCODE ------------------------------
   printBarcode(data: string, type: string, settings: any) {
@@ -378,7 +403,7 @@ class Star implements PrinterType {
     // +-------------------------------------------------------------------------------------------------------+
     // | Specification A                                | Specification B                                      |
     // +-------------------------------------------------------------------------------------------------------+
-    // | When the height of the bar code is more than   | Form feed at (Bar code height + underbar characters) |
+    // | When the height of the bar code is more than   | Form feed at (Bar code height + under bar characters) |
     // | the form feed amount, the form feed amount is  |                                                      |
     // | automatically doubled.                         |                                                      |
     // +-------------------------------------------------------------------------------------------------------+

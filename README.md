@@ -2,8 +2,6 @@
 
 Browser module for EPSON and STAR thermal printers command line printing.
 
-[![Join the chat at https://gitter.im/Klemen1337/node-thermal-printer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Klemen1337/node-thermal-printer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 ## Installation
 
 ```bash
@@ -26,19 +24,12 @@ const PrinterTypes = require("../node-thermal-printer").types;
 
 let printer = new ThermalPrinter({
   type: PrinterTypes.STAR, // Printer type: 'star' or 'epson'
-  interface: "tcp://xxx.xxx.xxx.xxx", // Printer interface
   characterSet: "SLOVENIA", // Printer character set - default: SLOVENIA
   removeSpecialCharacters: false, // Removes special characters - default: false
   lineCharacter: "=", // Set character for lines - default: "-"
-  options: {
-    // Additional options
-    timeout: 5000, // Connection timeout (ms) [applicable only for network printers] - default: 3000
-  },
 });
 
-let isConnected = await printer.isPrinterConnected(); // Check if printer is connected, return bool of status
-let execute = await printer.execute(); // Executes all the commands. Returns success or throws error
-let raw = await printer.raw(Buffer.from("Hello world")); // Print instantly. Returns success or throws error
+
 printer.print("Hello World"); // Append text
 printer.println("Hello World"); // Append text with new line
 printer.openCashDrawer(); // Kick the cash drawer
@@ -107,75 +98,6 @@ Local port or file
 
 ```bash
 node examples/example.js '\\.\COM1'
-```
-
-### Interface options
-
-| Value                     | Descripton                                                                                                                                                       |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tcp://192.168.0.99:9100` | Network printer with port                                                                                                                                        |
-| `printer:auto`            | Auto select raw system printer via [Printer](https://www.npmjs.com/package/printer) or [Electron printer](https://www.npmjs.com/package/electron-printer) module |
-| `printer:My Printer Name` | Select system printer by name via [Printer](https://www.npmjs.com/package/printer) or [Electron printer](https://www.npmjs.com/package/electron-printer) module  |
-| `\\.\COM1`                | Print via local port or file                                                                                                                                     |
-
-#### System Printer Drivers
-
-When using a system printer, you need to provide the driver.
-Use electron-printer or printer driver:
-
-```js
-const ThermalPrinter = require("node-thermal-printer").printer;
-const PrinterTypes = require("node-thermal-printer").types;
-const electron =
-  typeof process !== "undefined" &&
-  process.versions &&
-  !!process.versions.electron;
-
-let printer = new ThermalPrinter({
-  type: PrinterTypes.EPSON,
-  interface: "printer:My Printer",
-  driver: require(electron ? "electron-printer" : "printer"),
-});
-```
-
-Use a custom printer driver:
-
-```js
-const ThermalPrinter = require("node-thermal-printer").printer;
-const PrinterTypes = require("node-thermal-printer").types;
-
-let printer = new ThermalPrinter({
-  type: PrinterTypes.EPSON,
-  interface: "printer:My Printer",
-  driver: MyCustomDriver,
-});
-
-// you can also set the driver after init:
-printer.setPrinterDriver(MyCustomDriver);
-```
-
-### Network printing example
-
-```js
-const ThermalPrinter = require("node-thermal-printer").printer;
-const PrinterTypes = require("node-thermal-printer").types;
-
-let printer = new ThermalPrinter({
-  type: PrinterTypes.EPSON,
-  interface: "tcp://xxx.xxx.xxx.xxx",
-});
-
-printer.alignCenter();
-printer.println("Hello world");
-await printer.printImage("./assets/olaii-logo-black.png");
-printer.cut();
-
-try {
-  let execute = printer.execute();
-  console.error("Print done!");
-} catch (error) {
-  console.log("Print failed:", error);
-}
 ```
 
 ### 2D Barcode Examples

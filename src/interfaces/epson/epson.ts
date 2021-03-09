@@ -1,9 +1,17 @@
 import { Buffer } from "buffer";
-import PrinterType from "./printer-type";
+import PrinterInterface from "../printer-interface";
 import EpsonConfig from "./epson-config";
 import EpsonCodePages from "./epson-code-pages";
+import PNGReader from "png.js";
 
-class Epson implements PrinterType {
+interface Pixel {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+}
+
+class Epson implements PrinterInterface {
   codePage: Record<string, string> = EpsonCodePages;
   config: Record<string, Buffer> = EpsonConfig;
   buffer: Buffer = new Buffer("");
@@ -247,99 +255,113 @@ class Epson implements PrinterType {
     return this.buffer;
   }
 
-  // // ----------------------------------------------------- PRINT IMAGE -----------------------------------------------------
-  // // https://reference.epson-biz.com/modules/ref_escpos/index.php?content_id=88
-  // async printImage(image) {
-  //   let fs = require('fs');
-  //   let PNG = require('pngjs').PNG;
-  //   try {
-  //     var data = fs.readFileSync(image);
-  //     var png = PNG.sync.read(data);
-  //     let buff = this.printImageBuffer(png.width, png.height, png.data);
-  //     return buff;
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
+  // ----------------------------------------------------- PRINT IMAGE -----------------------------------------------------
+  // https://reference.epson-biz.com/modules/ref_escpos/index.php?content_id=88
+  async printImage(image: string): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", image, true);
+      xhr.responseType = "arraybuffer";
 
-  // printImageBuffer(width, height, data) {
-  //   this.buffer = null;
+      xhr.onload = e => {
+        const r = e.target as XMLHttpRequest;
+        if (r.status == 200) {
+          const reader = new PNGReader(r.response);
+          reader.parse((err: any, png: any) => {
+            if (err) {
+              reject(err);
+            } else {
+              const buff = this.printImageBuffer(png.width, png.height, png.pixels);
+              resolve(buff);
+            }
+          });
+        }
+      };
 
-  //   // Get pixel rgba in 2D array
-  //   var pixels = [];
-  //   for (var i = 0; i < height; i++) {
-  //     var line = [];
-  //     for (var j = 0; j < width; j++) {
-  //       var idx = (width * i + j) << 2;
-  //       line.push({
-  //         r: data[idx],
-  //         g: data[idx + 1],
-  //         b: data[idx + 2],
-  //         a: data[idx + 3]
-  //       });
-  //     }
-  //     pixels.push(line);
-  //   }
+      xhr.onerror = reject;
+      xhr.onabort = reject;
+      xhr.send();
+    });
+  }
 
-  //   var imageBuffer_array = [];
-  //   for (var i = 0; i < height; i++) {
-  //     for (var j = 0; j < Math.ceil(width / 8); j++) {
-  //       var byte = 0x0;
-  //       for (var k = 0; k < 8; k++) {
-  //         var pixel = pixels[i][j * 8 + k];
+  printImageBuffer(width: number, height: number, data: [number]): Buffer {
+    this.buffer = new Buffer("");
 
-  //         // Image overflow
-  //         if (pixel === undefined) {
-  //           pixel = {
-  //             a: 0,
-  //             r: 0,
-  //             g: 0,
-  //             b: 0
-  //           };
-  //         }
+    // Get pixel rgba in 2D array
+    const pixels: [Pixel[]] = [[]];
+    for (let i = 0; i < height; i++) {
+      const line: Pixel[] = [];
+      for (let j = 0; j < width; j++) {
+        const idx = (width * i + j) << 2;
+        line.push({
+          r: data[idx],
+          g: data[idx + 1],
+          b: data[idx + 2],
+          a: data[idx + 3]
+        });
+      }
+      pixels.push(line);
+    }
 
-  //         if (pixel.a > 126) { // checking transparency
-  //           var grayscale = parseInt(0.2126 * pixel.r + 0.7152 * pixel.g + 0.0722 * pixel.b);
+    const imageBuffer_array = [];
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < Math.ceil(width / 8); j++) {
+        let byte = 0x0;
+        for (let k = 0; k < 8; k++) {
+          let pixel = pixels[i][j * 8 + k];
 
-  //           if (grayscale < 128) { // checking color
-  //             var mask = 1 << 7 - k; // setting bitwise mask
-  //             byte |= mask; // setting the correct bit to 1
-  //           }
-  //         }
-  //       }
+          // Image overflow
+          if (pixel === undefined) {
+            pixel = {
+              a: 0,
+              r: 0,
+              g: 0,
+              b: 0
+            };
+          }
 
-  //       imageBuffer_array.push(byte);
-  //       // imageBuffer = Buffer.concat([imageBuffer, Buffer.from([byte])]);
-  //     }
-  //   }
+          if (pixel.a > 126) {
+            // checking transparency
+            const grayscale = Math.round(0.2126 * pixel.r + 0.7152 * pixel.g + 0.0722 * pixel.b);
+            if (grayscale < 128) {
+              // checking color
+              const mask = 1 << (7 - k); // setting bitwise mask
+              byte |= mask; // setting the correct bit to 1
+            }
+          }
+        }
 
-  //   let imageBuffer = Buffer.from(imageBuffer_array);
+        imageBuffer_array.push(byte);
+      }
+    }
 
-  //   // Print raster bit image
-  //   // GS v 0
-  //   // 1D 76 30	m	xL xH	yL yH d1...dk
-  //   // xL = (this.width >> 3) & 0xff;
-  //   // xH = 0x00;
-  //   // yL = this.height & 0xff;
-  //   // yH = (this.height >> 8) & 0xff;
-  //   // https://reference.epson-biz.com/modules/ref_escpos/index.php?content_id=94
+    const imageBuffer = Buffer.from(imageBuffer_array);
 
-  //   // Check if width/8 is decimal
-  //   if (width % 8 != 0) {
-  //     width += 8;
-  //   }
+    // Print raster bit image
+    // GS v 0
+    // 1D 76 30	m	xL xH	yL yH d1...dk
+    // xL = (this.width >> 3) & 0xff;
+    // xH = 0x00;
+    // yL = this.height & 0xff;
+    // yH = (this.height >> 8) & 0xff;
+    // https://reference.epson-biz.com/modules/ref_escpos/index.php?content_id=94
 
-  //   this.append(Buffer.from([0x1d, 0x76, 0x30, 48]));
-  //   this.append(Buffer.from([(width >> 3) & 0xff]));
-  //   this.append(Buffer.from([0x00]));
-  //   this.append(Buffer.from([height & 0xff]));
-  //   this.append(Buffer.from([(height >> 8) & 0xff]));
+    // Check if width/8 is decimal
+    if (width % 8 != 0) {
+      width += 8;
+    }
 
-  //   // append data
-  //   this.append(imageBuffer);
+    this.append(Buffer.from([0x1d, 0x76, 0x30, 48]));
+    this.append(Buffer.from([(width >> 3) & 0xff]));
+    this.append(Buffer.from([0x00]));
+    this.append(Buffer.from([height & 0xff]));
+    this.append(Buffer.from([(height >> 8) & 0xff]));
 
-  //   return this.buffer;
-  // }
+    // append data
+    this.append(imageBuffer);
+
+    return this.buffer;
+  }
 }
 
 export default Epson;

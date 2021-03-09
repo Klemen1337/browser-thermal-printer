@@ -1,7 +1,8 @@
 import { Buffer } from "buffer";
-import PrinterType from "./types/printer-type";
-import Star from "./types/star";
-import Epson from "./types/epson";
+import PrinterInterface from "./interfaces/printer-interface";
+import Star from "./interfaces/star/star";
+import Epson from "./interfaces/epson/epson";
+import PNGReader from "png.js";
 // import unorm from "unorm";
 
 export enum PrinterTypes {
@@ -25,7 +26,7 @@ export interface TableCustom {
 }
 
 export default class ThermalPrinter {
-  printer: PrinterType = new Star();
+  printer: PrinterInterface = new Star();
   buffer: Buffer = new Buffer("");
   config: {
     type: string;
@@ -323,46 +324,37 @@ export default class ThermalPrinter {
     this.append(this.printer.pdf417(data, settings));
   }
 
-  // // ----------------------------------------------------- PRINT IMAGE -----------------------------------------------------
-  // async printImage(image) {
-  //   try {
-  //     // Check if file exists
-  //     fs.accessSync(image);
+  // ----------------------------------------------------- PRINT IMAGE -----------------------------------------------------
+  async printImage(image: string) {
+    // Check for file type
+    if (image.slice(-4) === ".png") {
+      const response = await this.printer.printImage(image);
+      this.append(response);
+      return response;
+    } else {
+      throw new Error("Image printing supports only PNG files.");
+    }
+  }
 
-  //     // Check for file type
-  //     if (image.slice(-4) === ".png") {
-  //       try {
-  //         let response = await this.printer.printImage(image);
-  //         this.append(response);
-  //         return response;
-  //       } catch (error) {
-  //         throw error;
-  //       }
-  //     } else {
-  //       throw new Error("Image printing supports only PNG files.");
-  //     }
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
-
-  // // ----------------------------------------------------- PRINT IMAGE BUFFER -----------------------------------------------------
-  // async printImageBuffer(buffer) {
-  //   try {
-  //     var png = PNG.sync.read(buffer);
-  //     let buff = this.printer.printImageBuffer(png.width, png.height, png.data);
-  //     this.append(buff);
-  //     return buff;
-  //   } catch(error) {
-  //     throw error;
-  //   }
-  // }
+  // ----------------------------------------------------- PRINT IMAGE BUFFER -----------------------------------------------------
+  async printImageBuffer(buffer: ArrayBuffer): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const reader = new PNGReader(buffer);
+      reader.parse((err: any, png: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          const buff = this.printer.printImageBuffer(png.width, png.height, png.data);
+          this.append(buff);
+          resolve(buff);
+        }
+      });
+    });
+  }
 
   // ------------------------------ Set character set ------------------------------
   setCharacterSet(characterSet: string) {
-    console.log(this.printer);
     const buffer = this.printer.config[`CODE_PAGE_${characterSet}`];
-    console.log(buffer);
     if (buffer) {
       this.append(buffer);
       this.config.codePage = characterSet;

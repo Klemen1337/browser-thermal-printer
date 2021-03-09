@@ -22,6 +22,10 @@
   "homepage": "https://github.com/Klemen1337/browser-thermal-printer",
   "dependencies": {
     "buffer": "^6.0.3",
+    "png.js": "^0.2.1",
     "unorm": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/png.js": "^0.2.0"
   }
 }

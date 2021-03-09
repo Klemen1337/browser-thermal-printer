@@ -1,22 +1,7 @@
-const ThermalPrinter = require("../node-thermal-printer").printer;
-const Types = require("../node-thermal-printer").types;
-
+import ThermalPrinter, { PrinterTypes } from "../src/core"
 
 async function example () {
-  let printer = new ThermalPrinter({
-    type: Types.EPSON,  // 'star' or 'epson'
-    interface: process.argv[2],
-    options: {
-      timeout: 1000
-    },
-    width: 48,                         // Number of characters in one line - default: 48
-    characterSet: 'SLOVENIA',          // Character set - default: SLOVENIA
-    removeSpecialCharacters: false,    // Removes special characters - default: false
-    lineCharacter: "-",                // Use custom character for drawing lines - default: -
-  });
-
-  let isConnected = await printer.isPrinterConnected();
-  console.log("Printer connected:", isConnected);
+  const printer = new ThermalPrinter(PrinterTypes.EPSON);
 
   printer.alignCenter();
   await printer.printImage('./assets/olaii-logo-black-small.png');
@@ -102,12 +87,8 @@ async function example () {
   printer.cut();
   printer.openCashDrawer();
 
-  try {
-    await printer.execute();
-    console.log("Print success.");
-  } catch (error) {
-    console.error("Print error:", error);
-  }
+  // Print raw
+  console.log(print.getText());
 }
 
 
