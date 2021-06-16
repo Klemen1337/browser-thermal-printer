@@ -5,7 +5,7 @@ Browser module for EPSON and STAR thermal printers command line printing.
 ## Installation
 
 ```bash
-npm install browser-thermal-printer
+npm install browser-thermal-printer --save
 ```
 
 ### Features
