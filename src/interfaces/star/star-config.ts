@@ -89,6 +89,7 @@ export default {
   CODE_PAGE_WPC1258_VIETNAMESE: Buffer.from([0x1b, 0x74, 52]),
   CODE_PAGE_KZ1048_KAZAKHSTAN: Buffer.from([0x1b, 0x74, 53]),
   CODE_PAGE_JAPAN: Buffer.from([0x1b, 0x52, 0x08]),
+  CODE_PAGE_KOREA: Buffer.from([0x1b, 0x52, 0x0D]),
   CODE_PAGE_CHINA: Buffer.from([0x1b, 0x52, 0x0f]),
 
   // Barcode format

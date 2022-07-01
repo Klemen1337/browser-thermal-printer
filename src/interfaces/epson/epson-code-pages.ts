@@ -35,6 +35,7 @@ export default {
   WPC1258_VIETNAMESE: "WIN1258",
   KZ1048_KAZAKHSTAN: "RK1048",
   JAPAN: "EUC-JP",
+  KOREA: "EUC-KR",
   CHINA: "EUC-CN",
   HK_TW: "Big5-HKSCS"
 } as Record<string, string>;
