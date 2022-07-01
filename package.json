@@ -5,7 +5,7 @@
   "main": "dist/core.js",
   "types": "dist/core.d.ts",
   "scripts": {
-    "start": "tsc && node dist/core.js",
+    "start": "tsc --noEmit && node dist/core.js",
     "build": "tsc"
   },
   "repository": {
